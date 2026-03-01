@@ -90,25 +90,6 @@ func scanADF(dev device, outDir, prefix string, resolution int, source string) (
 	return matches, nil
 }
 
-func askReverseBack(r *bufio.Reader) bool {
-	fmt.Println()
-	fmt.Println("How did you reload the pages for the back side?")
-	fmt.Println("  [1] Flipped the whole stack (most common) – backs will be reversed")
-	fmt.Println("  [2] Same order as fronts – no reversal needed")
-	for {
-		fmt.Print("Choice [1/2]: ")
-		line, _ := r.ReadString('\n')
-		line = strings.TrimSpace(line)
-		switch line {
-		case "1", "":
-			return true
-		case "2":
-			return false
-		}
-		fmt.Println("Please enter 1 or 2.")
-	}
-}
-
 func organise(fronts, backs []string, outDir string, reverseBack bool) error {
 	if len(fronts) != len(backs) {
 		return fmt.Errorf("front page count (%d) does not match back page count (%d)", len(fronts), len(backs))
@@ -122,8 +103,8 @@ func organise(fronts, backs []string, outDir string, reverseBack bool) error {
 
 	for i := range fronts {
 		pageNum := i + 1
-		frontDst := filepath.Join(outDir, fmt.Sprintf("page_%04d_front.jpg", pageNum))
-		backDst := filepath.Join(outDir, fmt.Sprintf("page_%04d_back.jpg", pageNum))
+		frontDst := filepath.Join(outDir, fmt.Sprintf("page_%04d_A.jpg", pageNum))
+		backDst := filepath.Join(outDir, fmt.Sprintf("page_%04d_B.jpg", pageNum))
 
 		if err := os.Rename(fronts[i], frontDst); err != nil {
 			return fmt.Errorf("rename front page %d: %w", pageNum, err)
@@ -232,8 +213,7 @@ func main() {
 	}
 
 	// 6. Ask about stacking order and organise.
-	reverse := askReverseBack(r)
-	if err := organise(fronts, backs, outDir, reverse); err != nil {
+	if err := organise(fronts, backs, outDir, true); err != nil {
 		fmt.Fprintf(os.Stderr, "Organisation error: %v\n", err)
 		os.Exit(1)
 	}
